@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Man : MonoBehaviour
@@ -9,13 +7,12 @@ public class Man : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent(out Player player))
-            player.AddScore(_points);
+            player.AddScore(_points, GetComponent<MeshRenderer>().material.name);
 
         Die();
     }
 
-
-    private void Die()
+    public void Die()
     {
         gameObject.SetActive(false);
     }
