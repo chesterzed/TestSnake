@@ -8,7 +8,8 @@ public class ObjectPool : MonoBehaviour
     [SerializeField] private int _capacity;
 
     private List<GameObject> _poolPeople = new List<GameObject>();
-    private List<GameObject> _bonus = new List<GameObject>();
+    private List<GameObject> _poolBonus = new List<GameObject>();
+    private List<GameObject> _poolTail = new List<GameObject>();
 
     protected void Initialize(GameObject prefab, string type)
     {
@@ -23,7 +24,10 @@ public class ObjectPool : MonoBehaviour
                     _poolPeople.Add(spawned);
                     break;
                 case "Bonus":
-                    _bonus.Add(spawned);
+                    _poolBonus.Add(spawned);
+                    break;
+                case "Tail":
+                    _poolTail.Add(spawned);
                     break;
             }
         }
@@ -42,7 +46,10 @@ public class ObjectPool : MonoBehaviour
                     _poolPeople.Add(spawned);
                     break;
                 case "Bonus":
-                    _bonus.Add(spawned);
+                    _poolBonus.Add(spawned);
+                    break;
+                case "Tail":
+                    _poolTail.Add(spawned);
                     break;
             }
         }
@@ -56,7 +63,10 @@ public class ObjectPool : MonoBehaviour
                 result = _poolPeople.FirstOrDefault(p => p.activeSelf == false);
                 break;
             case "Bonus":
-                result = _bonus.FirstOrDefault(p => p.activeSelf == false);
+                result = _poolBonus.FirstOrDefault(p => p.activeSelf == false);
+                break;
+            case "Tail":
+                result = _poolTail.FirstOrDefault(p => p.activeSelf == false);
                 break;
             default:
                 result = null;

@@ -7,6 +7,9 @@ public class PlayerMover : MonoBehaviour
 
     private PlayerInput _input;
 
+    public float Speed => _speed;
+    public Vector3 PlayerPos => _playerPos;
+
     private void Awake()
     {
         _input = new PlayerInput();
@@ -31,6 +34,5 @@ public class PlayerMover : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
             transform.position = Vector3.Lerp(transform.position, new Vector3(hit.point.x, _playerPos.y, _playerPos.z), Time.deltaTime * _speed);
-
     }
 }

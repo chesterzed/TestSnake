@@ -21,6 +21,6 @@ public class EndLine : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.TryGetComponent<Player>(out Player player))
-            player.SwitchColor();
+            player.SetColor();
     }
 }
