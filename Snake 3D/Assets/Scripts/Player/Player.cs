@@ -86,7 +86,6 @@ public class Player : ObjectPool
 
         if (_crystals >= 3)
         {
-            _crystals = 0;
             StartCoroutine(FeverMode(5, 3));
         }
 
@@ -158,5 +157,7 @@ public class Player : ObjectPool
 
         spwnr.MultiplySpeedK = 1;
         _gameManager.FeverModeIsActive = false;
+
+        _crystals = 0;
     }
 }
