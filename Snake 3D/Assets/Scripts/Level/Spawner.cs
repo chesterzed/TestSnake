@@ -2,15 +2,10 @@ using UnityEngine;
 
 public class Spawner : ObjectPool
 {
-    [SerializeField] private GroupOfPeople _people;
-    [SerializeField] private Bonus _bonusObj;
-
-    [SerializeField] private float _maxSpawnDelay = 2;
-    [SerializeField] private int _itemBeforeSwitchPool = 6;
-    [SerializeField] private int _minItemBeforeSwitchPool = 10;
-    [SerializeField] private int _maxItemBeforeSwitchPool = 18;
+    [SerializeField] private SpawnerSetup spwnr;
     
     private ColorManager _manager;
+    private int _itemBeforeSwitchPool;
     private int _itemCounter;
     private int _objNumber;
     private float _randomPos;
@@ -22,8 +17,13 @@ public class Spawner : ObjectPool
     {
         _manager = FindObjectOfType<ColorManager>();
 
-        Initialize(_people.gameObject, "People");
-        Initialize(_bonusObj.gameObject, "Bonus", 3);
+        Initialize(spwnr.PeoplePrefab.gameObject, "People");
+        Initialize(spwnr.BonusPrefab.gameObject, "Bonus", 1);
+    }
+
+    private void Start()
+    {
+        _itemBeforeSwitchPool = Random.Range(spwnr.MinItemBeforeSwitchPool, spwnr.MaxItemBeforeSwitchPool);
     }
 
     private void Update()
@@ -34,7 +34,7 @@ public class Spawner : ObjectPool
         if (_elapsedTime >= _spawnDelay)
         {
             _elapsedTime = 0;
-            _spawnDelay = Random.Range(0.3f, _maxSpawnDelay);
+            _spawnDelay = Random.Range(spwnr.MinSpawnDistance / spwnr.ModEnemySpeed, spwnr.MaxSpawnDistance / spwnr.ModEnemySpeed);
 
             if (_itemCounter >= _itemBeforeSwitchPool)
             {
@@ -44,19 +44,19 @@ public class Spawner : ObjectPool
                 if (_spawnObjName[_objNumber] == "Bonus")
                 {
                     _itemBeforeSwitchPool = 1;
-                    _spawnDelay = 5f;
+                    _spawnDelay = 9f / spwnr.EnemySpeed;
                     _randomPos = 0;
                 }
                 else
                 {
-                    _itemBeforeSwitchPool = Random.Range(_minItemBeforeSwitchPool, _maxItemBeforeSwitchPool);
+                    _itemBeforeSwitchPool = Random.Range(spwnr.MinItemBeforeSwitchPool, spwnr.MaxItemBeforeSwitchPool);
                 }
             }
 
             _itemCounter++;
 
             if (TryGetObject(out GameObject obj, _spawnObjName[_objNumber]))
-                SetObject(obj, transform.position + new Vector3(_randomPos, 0, 0));
+                SetObject(obj, new Vector3(transform.position.x + _randomPos, transform.position.y, transform.position.z));
         }
     }
 
@@ -70,5 +70,13 @@ public class Spawner : ObjectPool
 
         obj.SetActive(true);
         obj.transform.position = spawnPoint;
+    }
+
+    public void Reset()
+    {
+        _spawnDelay = 0;
+        _objNumber = 0;
+        _itemCounter = 0;
+        _itemBeforeSwitchPool = Random.Range(spwnr.MinItemBeforeSwitchPool, spwnr.MaxItemBeforeSwitchPool);
     }
 }

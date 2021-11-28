@@ -20,7 +20,7 @@ public class EndLine : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
-            player.SetColor();
+        if (other.TryGetComponent<Mouth>(out Mouth mouth))
+            mouth.GetComponentInParent<Player>().SetColor();
     }
 }

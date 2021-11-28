@@ -4,40 +4,45 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerMover))]
 public class Player : ObjectPool
 {
-    [SerializeField] private UIController _UIController;
-    [SerializeField] private GameObject _tail;
-    [SerializeField] private int _health;
-    [SerializeField] float _cubeEdgeSize;
-    [SerializeField] private int _size = 2;
+    [SerializeField] private SpawnerSetup spwnr;
+    [SerializeField] private Tail _tail;
+    [SerializeField] private float _cubeEdgeSize;
+    [SerializeField] private int _score = 0;
     private int _crystals;
 
+    private GameManager _gameManager;
+    private UIController _UIController;
     private MeshRenderer _meshRenderer;
     private ColorManager _colorManager;
     private PlayerMover _mover;
 
     private List<Transform> tiles = new List<Transform>();
 
+
     private void Awake()
     {
+        _gameManager = FindObjectOfType<GameManager>();
         _UIController = FindObjectOfType<UIController>();
         _colorManager = FindObjectOfType<ColorManager>();
         _meshRenderer = GetComponent<MeshRenderer>();
         _mover = GetComponent<PlayerMover>();
 
-        Initialize(_tail, "Tail");
+        Initialize(_tail.gameObject, "Tail");
+    }
+
+    private void OnEnable()
+    {
+        StartCoroutine(FeverMode(2, 4));
     }
 
     private void Start()
     {
         SetColor();
 
-        _crystals = PlayerPrefs.GetInt("crystals");
-
-        _UIController.ScoreUpdate(_size);
+        _UIController.ScoreUpdate(_score);
         _UIController.CrystalUpdate(_crystals);
 
-        for (int i = 0; i < _size; i++)
-            AddTile();
+        AddTile();
     }
 
     private void Update()
@@ -46,54 +51,47 @@ public class Player : ObjectPool
         
         if (tiles.Count > 0)
         {
-            PosX = Mathf.Lerp(tiles[0].position.x, transform.position.x, Time.deltaTime * _mover.Speed);
+            PosX = Mathf.Lerp(tiles[0].position.x, transform.position.x, Time.deltaTime * _mover.PlayerSpeed);
             tiles[0].position = new Vector3(PosX, _mover.PlayerPos.y, _mover.PlayerPos.z - _cubeEdgeSize);
+            tiles[0].LookAt(transform, Vector3.up);
         }
         if (tiles.Count > 1)
         {
             for (int i = 0; i < tiles.Count - 1; i++)
             {
-                PosX = Mathf.Lerp(tiles[i + 1].position.x, tiles[i].position.x, Time.deltaTime * _mover.Speed);
+                PosX = Mathf.Lerp(tiles[i + 1].position.x, tiles[i].position.x, Time.deltaTime * _mover.PlayerSpeed);
                 tiles[i + 1].position = new Vector3(PosX, _mover.PlayerPos.y, _mover.PlayerPos.z - _cubeEdgeSize * (i + 2));
+                tiles[i + 1].LookAt(tiles[i], Vector3.up);
             }
         }
     }
 
-    public void ApplyDamage(int damage)
-    {
-        _health -= damage;
-
-        if (_health <= 0)
-            Die();
-    }
-
     public void AddScore(int points, string matName)
     {
-        if (_meshRenderer.material.name == matName)
+        if (_meshRenderer.material.name == matName || _gameManager.FeverModeIsActive)
         {
-            _size += points;
+            _score += points;
             AddTile();
         }
         else
         {
-            if ((points * 5) > tiles.Count)
-                points = tiles.Count;
-            else
-                points *= 5;
-
-            _size -= points;
-
-            for (int i = 0; i < points; i++)
-                RemoveTile();
+            Die();
         }
-        _UIController.ScoreUpdate(_size);
+        _UIController.ScoreUpdate(_score);
     }
 
     public void AddCrystal(int cryctalCount)
     {
         _crystals++;
-        PlayerPrefs.SetInt("crystals", _crystals);
+
+        if (_crystals >= 3)
+        {
+            _crystals = 0;
+            StartCoroutine(FeverMode(5, 3));
+        }
+
         _UIController.CrystalUpdate(_crystals);
+
     }
 
     public void SetColor()
@@ -106,17 +104,36 @@ public class Player : ObjectPool
 
     public void Die()
     {
+        if (PlayerPrefs.GetInt("bestScore", 0) > _score)
+            PlayerPrefs.SetInt("bestScore", _score);
+
         gameObject.SetActive(false);
-     
-        if (PlayerPrefs.GetInt("bestScore", 0) > _size)
-            PlayerPrefs.SetInt("bestScore", _size);
+
+        _UIController.ShowGameMenu(true, _UIController.LooseMenu);
+    }
+
+    public void Reset()
+    {
+        _score = 0;
+        _crystals = 0;
+        spwnr.MultiplySpeedK = 1;
+        gameObject.SetActive(true);
+        tiles.Clear();
+
+        _colorManager.NewColors();
+        _UIController.ScoreUpdate(_score);
+        _UIController.CrystalUpdate(_crystals);
+
+        SetColor();
+
+        StartCoroutine(FeverMode(2, 4));
     }
 
     private void AddTile()
     {
         if (TryGetObject(out GameObject obj, "Tail"))
         {
-            SetTail(obj, new Vector3(transform.position.x, _mover.PlayerPos.y, _mover.PlayerPos.z - _cubeEdgeSize * (tiles.Count + 1)));
+            SetTail(obj, new Vector3(transform.position.x, _mover.PlayerPos.y, _mover.PlayerPos.z - _cubeEdgeSize * (tiles.Count)));
             tiles.Add(obj.transform);
         }
 
@@ -124,15 +141,22 @@ public class Player : ObjectPool
             t.gameObject.GetComponent<MeshRenderer>().material = _meshRenderer.material;
     }
 
-    private void RemoveTile()
-    {
-        tiles[tiles.Count - 1].gameObject.SetActive(false);
-        tiles.RemoveAt(tiles.Count - 1);
-    }
-
     private void SetTail(GameObject obj, Vector3 spawnPoint)
     {
         obj.SetActive(true);
         obj.transform.position = spawnPoint;
+    }
+
+    private IEnumerator<WaitForSeconds> FeverMode(float time, int newSpeed)
+    {
+        spwnr.MultiplySpeedK = 3;
+        _gameManager.FeverModeIsActive = true;
+        transform.position = _mover.PlayerPos;
+        transform.rotation = Quaternion.identity;
+
+        yield return new WaitForSeconds(time);
+
+        spwnr.MultiplySpeedK = 1;
+        _gameManager.FeverModeIsActive = false;
     }
 }

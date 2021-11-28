@@ -3,8 +3,9 @@ using UnityEngine;
 public class ColorManager : MonoBehaviour
 {
     [SerializeField] private MaterialPool _matPool;
-    [SerializeField] private int _currentMaterialNumber;
-    [SerializeField] private int _secondMaterialNumber;
+
+    private int _currentMaterialNumber;
+    private int _secondMaterialNumber;
 
     private int _lastNumber;
 

@@ -6,8 +6,8 @@ public class Crystal : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
-            player.AddCrystal(_points);
+        if (other.TryGetComponent<Mouth>(out Mouth mouth))
+            mouth.GetComponentInParent<Player>().AddCrystal(_points);
 
         Die();
     }

@@ -1,13 +1,19 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class Mine : MonoBehaviour
 {
-    [SerializeField] private int _damage = 1;
+    private GameManager _gameManager;
+
+    private void Awake()
+    {
+        _gameManager = FindObjectOfType<GameManager>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
-            player.ApplyDamage(_damage);
+        if (other.TryGetComponent<Mouth>(out Mouth mouth) && !_gameManager.FeverModeIsActive)
+            mouth.GetComponentInParent<Player>().Die();
 
         Die();
     }

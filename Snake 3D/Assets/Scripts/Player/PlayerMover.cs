@@ -3,15 +3,20 @@ using UnityEngine;
 public class PlayerMover : MonoBehaviour
 {
     [SerializeField] private float _speed;
+    [SerializeField] private float _lookDelta;
     [SerializeField] private Vector3 _playerPos;
 
+    private GameManager _gameManager;
     private PlayerInput _input;
 
-    public float Speed => _speed;
+    public float PlayerSpeed => _speed;
     public Vector3 PlayerPos => _playerPos;
+
+    public PlayerInput Input => _input;
 
     private void Awake()
     {
+        _gameManager = FindObjectOfType<GameManager>();
         _input = new PlayerInput();
     }
 
@@ -32,7 +37,20 @@ public class PlayerMover : MonoBehaviour
         Ray ray =  Camera.main.ScreenPointToRay(touch);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit))
-            transform.position = Vector3.Lerp(transform.position, new Vector3(hit.point.x, _playerPos.y, _playerPos.z), Time.deltaTime * _speed);
+        if (Physics.Raycast(ray, out hit) && !_gameManager.FeverModeIsActive)
+        {
+            Vector3 hitPoint = new Vector3(hit.point.x, _playerPos.y, _playerPos.z);
+            Vector3 lookPoint = new Vector3(hit.point.x, _playerPos.y, _playerPos.z + _lookDelta);
+
+            transform.position = Vector3.Lerp(transform.position, hitPoint, Time.deltaTime * _speed);
+            transform.LookAt(lookPoint, Vector3.up);
+
+            if (Mathf.Abs((hitPoint - transform.position).magnitude) < 0.01)
+            {
+                transform.position = hitPoint;
+                transform.rotation = Quaternion.identity;
+            }
+        }
+
     }
 }
